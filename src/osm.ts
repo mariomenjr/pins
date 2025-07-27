@@ -9,7 +9,7 @@ export default class Osm {
 
   static icon = L.divIcon({
     className: "custom-icon",
-    html: '<svg class="h-7 w-7 inline shadow-lg"><use href="/app.svg#icon-crosshairs-gps"></use></svg>',
+    html: '<svg class="h-7 w-7"><use href="/app.svg#icon-crosshairs-gps"></use></svg>',
     iconSize: [24, 24],
     iconAnchor: [12, 24],
   });
