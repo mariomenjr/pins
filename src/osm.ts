@@ -1,4 +1,11 @@
-import maplibregl from "maplibre-gl";
+import type {
+  FeatureCollection,
+  Point,
+  Feature,
+  GeoJsonProperties,
+} from "geojson";
+import maplibregl, { GeoJSONSource } from "maplibre-gl";
+
 import "maplibre-gl/dist/maplibre-gl.css";
 
 export default class Osm {
@@ -26,6 +33,7 @@ export default class Osm {
 
     if (!Osm.map) {
       Osm.map = new maplibregl.Map({
+        // cooperativeGestures: true,
         container: Osm.MAP_DIV,
         style: Osm.VECTOR_TITLE_URL,
         center: Osm.FALLBACK_COORDS,
@@ -40,27 +48,67 @@ export default class Osm {
         },
         trackUserLocation: true,
         fitBoundsOptions: {
+          linear: true,
           zoom: Osm.ZOOM,
         },
       });
 
+      Osm.map.addControl(new maplibregl.NavigationControl(), "top-right");
+      Osm.map.addControl(new maplibregl.LogoControl({ compact: false }));
+      Osm.map.addControl(new maplibregl.GlobeControl());
       Osm.map.addControl(Osm.geolocate!);
+
       Osm.map.on("load", () => Osm.geolocate!.trigger());
       Osm.geolocate!.on("geolocate", (position) => {
-        console.log(
-          `Geolocated: ${position.coords.latitude}, ${position.coords.longitude}`,
-        );
-        Osm.heatmap();
+        const coords = `${position.coords.longitude}, ${position.coords.latitude}`;
+        console.log(coords);
+
+        Osm._heatmap();
+      });
+      Osm.map.on("click", async (e) => {
+        const src = Osm.map!.getSource("earthquakes") as GeoJSONSource;
+
+        const time = Date.now();
+
+        const data = (await src!.getData()) as FeatureCollection;
+        const point: Feature<Point, GeoJsonProperties> = {
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [e.lngLat.lng, e.lngLat.lat],
+          },
+          properties: {
+            // name: `Random Point ${data.features.length + 1}`,
+            id: time,
+            mag: Math.random() * 6,
+            time: time,
+            felt: null,
+            tsunami: 0,
+          },
+        };
+
+        data.features.push(point);
+
+        if (src) src.setData(data);
       });
     }
   }
 
-  public static heatmap() {
+  // public static mark() {
+  //   new maplibregl.Marker().setLngLat([-117.6591, 33.5104]).addTo(Osm.map!);
+  // }
+
+  private static _heatmap() {
+    if (Osm.map!.isSourceLoaded("earthquakes")) return;
+
     // Add a geojson point source.
     // Heatmap layers also work with a vector tile source.
     Osm.map!.addSource("earthquakes", {
       type: "geojson",
-      data: "https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson",
+      data: {
+        type: "FeatureCollection",
+        features: [],
+      },
     });
 
     Osm.map!.addLayer({

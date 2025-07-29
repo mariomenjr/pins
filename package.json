@@ -10,12 +10,14 @@
   },
   "devDependencies": {
     "@types/alpinejs": "^3.13.11",
+    "@types/geojson": "^7946.0.16",
     "typescript": "~5.8.3",
     "vite": "^7.0.0"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
     "alpinejs": "^3.14.9",
+    "geojson": "^0.5.0",
     "maplibre-gl": "^5.6.1",
     "tailwindcss": "^4.1.11"
   }

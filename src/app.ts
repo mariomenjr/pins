@@ -7,8 +7,8 @@ export default class App {
     Osm.start();
 
     // Alpine.data(`toolbox`, () => ({
-    //   heatmap() {
-    //     Osm.heatmap();
+    //   mark() {
+    //     // Osm.mark();
     //   },
     // }));
 
