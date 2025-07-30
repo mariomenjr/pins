@@ -66,7 +66,7 @@ export default class Osm {
         Osm._heatmap();
       });
       Osm.map.on("click", async (e) => {
-        const src = Osm.map!.getSource("earthquakes") as GeoJSONSource;
+        const src = Osm.map!.getSource("sighting") as GeoJSONSource;
 
         const time = Date.now();
 
@@ -99,11 +99,11 @@ export default class Osm {
   // }
 
   private static _heatmap() {
-    if (Osm.map!.isSourceLoaded("earthquakes")) return;
+    if (Osm.map!.isSourceLoaded("sighting")) return;
 
     // Add a geojson point source.
     // Heatmap layers also work with a vector tile source.
-    Osm.map!.addSource("earthquakes", {
+    Osm.map!.addSource("sighting", {
       type: "geojson",
       data: {
         type: "FeatureCollection",
@@ -112,9 +112,9 @@ export default class Osm {
     });
 
     Osm.map!.addLayer({
-      id: "earthquakes-heat",
+      id: "sighting-heat",
       type: "heatmap",
-      source: "earthquakes",
+      source: "sighting",
       paint: {
         // Increase the heatmap weight based on frequency and property magnitude
         "heatmap-weight": [
@@ -157,9 +157,9 @@ export default class Osm {
     });
 
     Osm.map!.addLayer({
-      id: "earthquakes-point",
+      id: "sighting-point",
       type: "circle",
-      source: "earthquakes",
+      source: "sighting",
       minzoom: 7,
       paint: {
         // Size circle radius by earthquake magnitude and zoom level
