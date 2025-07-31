@@ -56,7 +56,7 @@ export default class Osm {
       });
 
       Osm.map.addControl(new maplibregl.NavigationControl(), "top-right");
-      Osm.map.addControl(new maplibregl.LogoControl({ compact: false }));
+      Osm.map.addControl(new maplibregl.LogoControl({ compact: true }));
       Osm.map.addControl(new maplibregl.GlobeControl());
       Osm.map.addControl(Osm.geolocate!);
 
