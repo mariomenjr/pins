@@ -19,10 +19,12 @@ export default class Osm {
   static readonly VECTOR_TITLE_URL =
     "https://tiles.openfreemap.org/styles/liberty";
 
-  static readonly FALLBACK_COORDS: maplibregl.LngLatLike = [-117.6591, 33.5104]; // [-0.09, 51.505];
+  static readonly FALLBACK_COORDS: maplibregl.LngLatLike = [-117.6591, 33.5104];
 
   static map: maplibregl.Map | null = null;
   static geolocate: maplibregl.GeolocateControl | null = null;
+
+  static isMarkModeOn: boolean = false;
 
   static start() {
     if (!document.getElementById("map")) {
@@ -68,6 +70,8 @@ export default class Osm {
         Osm._heatmap();
       });
       Osm.map.on("click", async (e) => {
+        if (!Osm.isMarkModeOn) return;
+
         const src = Osm.map!.getSource("sighting") as GeoJSONSource;
 
         const time = Date.now();
@@ -80,7 +84,6 @@ export default class Osm {
             coordinates: [e.lngLat.lng, e.lngLat.lat],
           },
           properties: {
-            // name: `Random Point ${data.features.length + 1}`,
             id: time,
             mag: Math.random() * Osm.HEATMAP_MAX_MAG,
             time: time,
@@ -96,9 +99,10 @@ export default class Osm {
     }
   }
 
-  // public static mark() {
-  //   new maplibregl.Marker().setLngLat([-117.6591, 33.5104]).addTo(Osm.map!);
-  // }
+  public static toggleMarkMode() {
+    Osm.isMarkModeOn = !Osm.isMarkModeOn;
+    Osm.map!.getCanvas().style.cursor = Osm.isMarkModeOn ? "crosshair" : "";
+  }
 
   private static _heatmap() {
     if (Osm.map!.isSourceLoaded("sighting")) return;
@@ -109,7 +113,7 @@ export default class Osm {
       type: "geojson",
       data: {
         type: "FeatureCollection",
-        features: Array.from({ length: 50 }).map((_, i) => ({
+        features: Array.from({ length: 50 }).map(() => ({
           type: "Feature" as const,
           geometry: {
             type: "Point" as const,

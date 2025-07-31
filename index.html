@@ -16,29 +16,30 @@
         <!-- Floating vertical menu -->
         <header
             x-data="toolbox"
-            class="fixed top-4 left-4 z-50 flex flex-col items-end shadow-lg"
+            class="fixed top-3 left-3 z-50 flex flex-col items-end shadow-lg"
         >
-            <div class="flex flex-col bg-white shadow-lg">
+            <div class="flex flex-col bg-white shadow-lg rounded">
                 <!-- Menu icons as buttons -->
                 <button
-                    class="px-2 py-2 hover:bg-gray-100 transition cursor-pointer"
+                    class="px-2 py-2 hover:bg-gray-100 transition cursor-pointer rounded"
                     aria-label="Account"
                 >
                     <!-- Upload icon -->
-                    <svg class="h-5 w-5 inline">
+                    <svg class="h-5 w-5">
                         <use href="/app.svg#icon-account-arrow-right"></use>
                     </svg>
                 </button>
-                <!-- <div class="border-t border-gray-200 mx-1"></div>
+                <div class="border-t border-gray-200"></div>
                 <button
-                    class="px-2 py-2 hover:bg-gray-100 transition cursor-pointer"
+                    class="px-2 py-2 transition cursor-pointer rounded-b"
+                    :class="{ 'bg-gray-500 shadow-2xl': markMode, 'hover:bg-gray-100': !markMode }"
                     aria-label="Location"
                     @click="mark"
                 >
-                    <svg class="h-5 w-5 inline">
+                    <svg class="h-5 w-5" :class="{ 'fill-white': markMode }">
                         <use href="/app.svg#icon-add-marker"></use>
                     </svg>
-                </button> -->
+                </button>
             </div>
         </header>
 

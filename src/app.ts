@@ -6,11 +6,14 @@ export default class App {
   static start() {
     Osm.start();
 
-    // Alpine.data(`toolbox`, () => ({
-    //   mark() {
-    //     // Osm.mark();
-    //   },
-    // }));
+    Alpine.data(`toolbox`, () => ({
+      markMode: Osm.isMarkModeOn,
+
+      mark() {
+        Osm.toggleMarkMode();
+        this.markMode = Osm.isMarkModeOn;
+      },
+    }));
 
     Alpine.start();
   }
