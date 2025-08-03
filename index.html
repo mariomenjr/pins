@@ -8,6 +8,13 @@
         <link rel="stylesheet" href="/src/style.css" />
 
         <title>Pins</title>
+
+        <!-- Google Sign-in library -->
+        <script
+            src="https://accounts.google.com/gsi/client"
+            async
+            defer
+        ></script>
     </head>
 
     <body class="relative h-screen w-screen">
@@ -22,19 +29,30 @@
         <!-- Floating vertical menu -->
         <aside
             x-data="toolbox"
+            x-init="init()"
             class="fixed top-3 left-3 z-50 flex flex-col items-end shadow-lg"
             aria-label="Map tools"
         >
             <nav class="flex flex-col bg-white shadow-lg rounded">
                 <!-- Menu icons as buttons -->
                 <button
-                    class="px-2 py-2 hover:bg-gray-100 transition cursor-pointer rounded"
+                    class="px-2 py-2 hover:bg-gray-100 transition cursor-pointer rounded flex items-center justify-center"
                     aria-label="Open account menu"
+                    @click="handleGoogleAuth"
                 >
-                    <!-- Upload icon -->
-                    <svg class="h-5 w-5">
-                        <use href="/app.svg#icon-account-arrow-right"></use>
-                    </svg>
+                    <!-- Show user avatar if signed in, otherwise show account icon -->
+                    <template x-if="isSignedIn && user">
+                        <img
+                            :src="user.picture"
+                            :alt="user.name"
+                            class="h-5 w-5 rounded-full"
+                        />
+                    </template>
+                    <template x-if="!isSignedIn">
+                        <svg class="h-5 w-5">
+                            <use href="/app.svg#icon-account-arrow-right"></use>
+                        </svg>
+                    </template>
                 </button>
                 <div class="border-t border-gray-200"></div>
                 <button
