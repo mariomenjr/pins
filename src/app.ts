@@ -1,8 +1,8 @@
 import Alpine from "alpinejs";
 
-import Osm from "./osm";
-import GoogleAuth, { type GoogleUser } from "./google-auth";
-import Security from "./security";
+import { Osm } from "./core/map";
+import { GoogleAuth, type GoogleUser } from "./core/auth";
+import { Security } from "./core/security";
 
 export default class App {
   static start() {

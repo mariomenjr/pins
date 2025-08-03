@@ -1,4 +1,4 @@
-import Security from "./security";
+import { Security } from "../security";
 
 export interface GoogleUser {
   id: string;
