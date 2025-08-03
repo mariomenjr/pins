@@ -9,6 +9,13 @@ export default class App {
     // Initialize security measures first
     Security.initialize();
 
+    // Log CSP status
+    if (Security.isProduction()) {
+      console.log("Production environment detected, CSP enabled for security");
+    } else {
+      console.log("Development environment detected, CSP disabled");
+    }
+
     Osm.start();
 
     Alpine.data(`toolbox`, () => ({

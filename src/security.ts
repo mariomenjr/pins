@@ -10,7 +10,7 @@ export interface SecurityConfig {
 }
 
 export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
-  enableCSP: !isDevelopment(), // Disabled in development
+  enableCSP: !isDevelopment(), // Enabled in production, disabled in development
   allowedDomains: ["accounts.google.com", "www.googleapis.com"],
   sessionTimeout: 60 * 60 * 1000, // 1 hour
   maxStorageSize: 5000, // 5KB
@@ -25,11 +25,22 @@ function isDevelopment(): boolean {
     return true;
   }
 
-  // Check for common development hostnames and ports
+  // Check for production domains first
   if (typeof location !== "undefined") {
     const hostname = location.hostname;
-    const port = location.port;
 
+    // Known production domains
+    const productionDomains = [
+      "pins.mariomenjr.com",
+      "genuine-chimera-400df9.netlify.app",
+    ];
+
+    if (productionDomains.includes(hostname)) {
+      return false;
+    }
+
+    // Check for common development patterns
+    const port = location.port;
     return (
       hostname === "localhost" ||
       hostname === "127.0.0.1" ||
@@ -42,8 +53,8 @@ function isDevelopment(): boolean {
     );
   }
 
-  // Default to development if we can't determine
-  return true;
+  // Default to production if we can't determine (safer)
+  return false;
 }
 
 export default class Security {
@@ -70,10 +81,20 @@ export default class Security {
       return; // CSP already set
     }
 
+    // Remove any existing report-only CSP first
+    const reportOnly = document.querySelector(
+      'meta[http-equiv="Content-Security-Policy-Report-Only"]',
+    );
+    if (reportOnly) {
+      reportOnly.remove();
+    }
+
     const cspMeta = document.createElement("meta");
     cspMeta.httpEquiv = "Content-Security-Policy";
     cspMeta.content = this.generateCSPPolicy();
     document.head.appendChild(cspMeta);
+
+    console.log("CSP enforced:", this.generateCSPPolicy());
   }
 
   /**
@@ -82,13 +103,18 @@ export default class Security {
   private static generateCSPPolicy(): string {
     const allowedDomains = this.config.allowedDomains.join(" ");
     return [
-      "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' ${allowedDomains}`,
-      `connect-src 'self' ${allowedDomains}`,
-      `img-src 'self' data: https:`,
+      "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: https: blob:",
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${allowedDomains} https: blob:`,
+      `connect-src 'self' ${allowedDomains} https: wss: ws:`,
+      `img-src 'self' data: https: blob:`,
+      `style-src 'self' 'unsafe-inline' https: blob:`,
+      `font-src 'self' data: https: blob:`,
+      `media-src 'self' data: https: blob:`,
+      `worker-src 'self' blob:`,
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
+      "frame-ancestors 'none'",
     ].join("; ");
   }
 
@@ -207,5 +233,73 @@ export default class Security {
 
     // In production, you'd send this to your monitoring service:
     // fetch('/api/security-log', { method: 'POST', body: JSON.stringify(logData) });
+  }
+
+  /**
+   * Enable CSP manually (useful for production after testing)
+   */
+  static enableCSP(): void {
+    this.config.enableCSP = true;
+    if (typeof document !== "undefined") {
+      this.setupCSP();
+    }
+  }
+
+  /**
+   * Test CSP without enforcing (report-only mode)
+   */
+  static testCSP(): void {
+    if (typeof document === "undefined") return;
+
+    const existingCSP = document.querySelector(
+      'meta[http-equiv="Content-Security-Policy"]',
+    );
+    const existingReportOnly = document.querySelector(
+      'meta[http-equiv="Content-Security-Policy-Report-Only"]',
+    );
+
+    if (existingCSP || existingReportOnly) {
+      console.log("CSP already configured");
+      return;
+    }
+
+    const cspMeta = document.createElement("meta");
+    cspMeta.httpEquiv = "Content-Security-Policy-Report-Only";
+    cspMeta.content = this.generateCSPPolicy();
+    document.head.appendChild(cspMeta);
+
+    console.log(
+      "CSP enabled in report-only mode. Check browser console for violations.",
+    );
+  }
+
+  /**
+   * Enable CSP with custom configuration for production
+   */
+  static enableProductionCSP(): void {
+    const productionConfig = {
+      enableCSP: true,
+      allowedDomains: [
+        "accounts.google.com",
+        "www.googleapis.com",
+        "*.googleapis.com",
+        "fonts.googleapis.com",
+        "fonts.gstatic.com",
+      ],
+    };
+
+    this.config = { ...this.config, ...productionConfig };
+
+    if (typeof document !== "undefined") {
+      console.log("Enabling production-safe CSP...");
+      this.setupCSP();
+    }
+  }
+
+  /**
+   * Check if we're in a production environment
+   */
+  static isProduction(): boolean {
+    return !isDevelopment();
   }
 }
