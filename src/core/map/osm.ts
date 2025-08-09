@@ -24,6 +24,8 @@ export default class Osm {
 
   static map: maplibregl.Map | null = null;
   static isMarkModeOn: boolean = false;
+  static lastBounds: maplibregl.LngLatBounds | null = null;
+  static heatmapTimeout: number | null = null;
 
   static start() {
     Osm._precheck();
@@ -97,28 +99,37 @@ export default class Osm {
       Osm._initializeSource();
       geolocate.trigger();
     });
+    
+    Osm.map.on("moveend", () => {
+      Osm._debouncedHeatmap();
+    });
     Osm.map.on("click", Osm.addSightingAsync);
   }
 
   public static async addSightingAsync(e: maplibregl.MapMouseEvent) {
     if (!Osm.isMarkModeOn) return;
 
-    const src = Osm.map!.getSource(Osm.SOURCE_NAME) as GeoJSONSource;
-    if (!src) {
-      console.warn('Sighting source not yet initialized');
-      return;
+    try {
+      const { error } = await supabase
+        .from('points')
+        .insert([
+          { 
+            lng: e.lngLat.lng, 
+            lat: e.lngLat.lat, 
+            mag: Math.random() * Osm.HEATMAP_MAX_MAG 
+          }
+        ]);
+
+      if (error) {
+        console.error('Failed to save point:', error);
+        return;
+      }
+
+      // Refresh the heatmap to show the new point
+      Osm._heatmap();
+    } catch (error) {
+      console.error('Error adding sighting:', error);
     }
-
-    const data = (await src.getData()) as FeatureCollection;
-
-    data.features.push(
-      createPoint(
-        [e.lngLat.lng, e.lngLat.lat],
-        Math.random() * Osm.HEATMAP_MAX_MAG,
-      ),
-    );
-
-    src.setData(data);
   }
 
   public static toggleMarkMode() {
@@ -160,6 +171,30 @@ export default class Osm {
     Osm.map!.addLayer(
       createCircleLayer(Osm.SOURCE_NAME, Osm.HEATMAP_MAX_MAG, Osm.MIN_MAP_ZOOM),
     );
+  }
+
+  private static _debouncedHeatmap() {
+    if (Osm.heatmapTimeout) {
+      clearTimeout(Osm.heatmapTimeout);
+    }
+    
+    Osm.heatmapTimeout = window.setTimeout(() => {
+      const currentBounds = Osm.map!.getBounds();
+      
+      // Only fetch if bounds changed significantly
+      if (!Osm.lastBounds || !Osm._boundsEqual(currentBounds, Osm.lastBounds)) {
+        Osm.lastBounds = currentBounds;
+        Osm._heatmap();
+      }
+    }, 300);
+  }
+
+  private static _boundsEqual(bounds1: maplibregl.LngLatBounds, bounds2: maplibregl.LngLatBounds): boolean {
+    const threshold = 0.001; // ~100m
+    return Math.abs(bounds1.getWest() - bounds2.getWest()) < threshold &&
+           Math.abs(bounds1.getEast() - bounds2.getEast()) < threshold &&
+           Math.abs(bounds1.getNorth() - bounds2.getNorth()) < threshold &&
+           Math.abs(bounds1.getSouth() - bounds2.getSouth()) < threshold;
   }
 
   private static async _heatmap() {
