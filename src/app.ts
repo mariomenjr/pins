@@ -26,6 +26,12 @@ export default class App {
       async init() {
         await GoogleAuth.initialize();
 
+        // Set up callback for auth state changes
+        GoogleAuth.setStateChangeCallback((user) => {
+          this.user = user;
+          this.isSignedIn = user !== null;
+        });
+
         // Load user state from storage
         this.user = GoogleAuth.getCurrentUser();
         this.isSignedIn = GoogleAuth.isSignedIn();

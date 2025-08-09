@@ -13,6 +13,7 @@ export default class GoogleAuth {
   private static currentUser: GoogleUser | null = null;
   private static isInitialized = false;
   private static readonly STORAGE_KEY = "google_auth_user";
+  private static onStateChange: ((user: GoogleUser | null) => void) | null = null;
 
   static async initialize(): Promise<void> {
     if (this.isInitialized) return;
@@ -137,6 +138,7 @@ export default class GoogleAuth {
       picture: payload.picture,
     };
     this.saveUserToStorage();
+    this.notifyStateChange();
   }
 
   private static async fetchUserProfile(
@@ -161,6 +163,7 @@ export default class GoogleAuth {
           picture: profile.picture,
         };
         this.saveUserToStorage();
+        this.notifyStateChange();
         return this.currentUser;
       }
     } catch (error) {
@@ -245,6 +248,16 @@ export default class GoogleAuth {
       name: Security.sanitizeString(user.name, 100),
       picture: Security.sanitizeString(user.picture, 500),
     };
+  }
+
+  static setStateChangeCallback(callback: (user: GoogleUser | null) => void): void {
+    this.onStateChange = callback;
+  }
+
+  private static notifyStateChange(): void {
+    if (this.onStateChange) {
+      this.onStateChange(this.currentUser);
+    }
   }
 
   private static removeUserFromStorage(): void {
