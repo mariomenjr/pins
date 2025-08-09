@@ -110,13 +110,18 @@ export default class Osm {
     if (!Osm.isMarkModeOn) return;
 
     try {
+      // Get current user from Alpine.js store
+      const user = (window as any).Alpine?.store('auth')?.user;
+      const userId = user?.sub || 'anonymous';
+
       const { error } = await supabase
         .from('points')
         .insert([
           { 
             lng: e.lngLat.lng, 
             lat: e.lngLat.lat, 
-            mag: Math.random() * Osm.HEATMAP_MAX_MAG 
+            mag: Math.random() * Osm.HEATMAP_MAX_MAG,
+            user_id: userId
           }
         ]);
 
