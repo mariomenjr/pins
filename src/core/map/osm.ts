@@ -1,7 +1,9 @@
 import type { FeatureCollection } from "geojson";
 import maplibregl, { GeoJSONSource } from "maplibre-gl";
+import MaplibreGeocoder, { type CarmenGeojsonFeature } from '@maplibre/maplibre-gl-geocoder';
 
 import "maplibre-gl/dist/maplibre-gl.css";
+import '@maplibre/maplibre-gl-geocoder/dist/maplibre-gl-geocoder.css';
 import { createCircleLayer, createHeatmapLayer, createPoint } from "./utils";
 
 const div = "map";
@@ -32,6 +34,7 @@ export default class Osm {
       maxZoom: Osm.MAX_MAP_ZOOM,
       minZoom: Osm.MIN_MAP_ZOOM,
       zoom: Osm.MAP_ZOOM,
+      attributionControl: false,
     });
 
     const geolocate = new maplibregl.GeolocateControl({
@@ -45,8 +48,37 @@ export default class Osm {
       },
     });
 
+    const geocoder = new MaplibreGeocoder({
+      forwardGeocode: async (config) => {
+        const features: CarmenGeojsonFeature[] = [];
+        try {
+          const center = Osm.map!.getCenter();
+          const request = `https://nominatim.openstreetmap.org/search?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1&lat=${center.lat}&lon=${center.lng}&bounded=1&viewbox=${center.lng-0.1},${center.lat+0.1},${center.lng+0.1},${center.lat-0.1}&limit=5`;
+          const response = await fetch(request);
+          const geojson = await response.json();
+          for (const feature of geojson.features) {
+            features.push({
+              ...feature,
+              place_name: feature.properties.display_name,
+              center: feature.geometry.coordinates
+            });
+          }
+        } catch (e) {
+          console.error(`Failed to forwardGeocode with error: ${e}`);
+        }
+        return {
+          type: 'FeatureCollection',
+          features
+        };
+      }
+    }, {
+      debounceSearch: 300,
+      showResultsWhileTyping: true
+    });
+    
+    Osm.map.addControl(geocoder, "bottom-left");
     Osm.map.addControl(new maplibregl.NavigationControl(), "top-right");
-    Osm.map.addControl(new maplibregl.LogoControl({ compact: true }));
+    Osm.map.addControl(new maplibregl.AttributionControl({ compact: false }));
     Osm.map.addControl(new maplibregl.GlobeControl());
     Osm.map.addControl(geolocate);
 
