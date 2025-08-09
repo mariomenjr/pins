@@ -53,8 +53,8 @@ export default class Osm {
       forwardGeocode: async (config) => {
         const features: CarmenGeojsonFeature[] = [];
         try {
-          const center = Osm.map!.getCenter();
-          const request = `${nominatim}?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1&lat=${center.lat}&lon=${center.lng}&bounded=1&viewbox=${center.lng-0.1},${center.lat+0.1},${center.lng+0.1},${center.lat-0.1}&limit=5`;
+          const bounds = Osm.map!.getBounds();
+          const request = `${nominatim}?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1&bounded=1&viewbox=${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
           const response = await fetch(request);
           const geojson = await response.json();
           for (const feature of geojson.features) {
@@ -75,6 +75,9 @@ export default class Osm {
     }, {
       debounceSearch: 300,
       showResultsWhileTyping: true,
+      clearOnBlur: true,
+      clearAndBlurOnEsc: true,
+      limit: 7,
       flyTo: {
         animate: true,
         zoom: (Osm.MAX_MAP_ZOOM-Osm.MAP_ZOOM) / 1.5 + Osm.MAP_ZOOM
