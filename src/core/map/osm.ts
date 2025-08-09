@@ -8,6 +8,7 @@ import { createCircleLayer, createHeatmapLayer, createPoint } from "./utils";
 
 const div = "map";
 const vtu = "https://tiles.openfreemap.org/styles/liberty";
+const nominatim = "https://nominatim.openstreetmap.org/search";
 
 export default class Osm {
   static readonly MAP_DIV = div;
@@ -53,7 +54,7 @@ export default class Osm {
         const features: CarmenGeojsonFeature[] = [];
         try {
           const center = Osm.map!.getCenter();
-          const request = `https://nominatim.openstreetmap.org/search?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1&lat=${center.lat}&lon=${center.lng}&bounded=1&viewbox=${center.lng-0.1},${center.lat+0.1},${center.lng+0.1},${center.lat-0.1}&limit=5`;
+          const request = `${nominatim}?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1&lat=${center.lat}&lon=${center.lng}&bounded=1&viewbox=${center.lng-0.1},${center.lat+0.1},${center.lng+0.1},${center.lat-0.1}&limit=5`;
           const response = await fetch(request);
           const geojson = await response.json();
           for (const feature of geojson.features) {
