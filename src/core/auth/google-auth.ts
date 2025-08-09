@@ -15,7 +15,7 @@ export default class GoogleAuth {
   private static readonly STORAGE_KEY = "google_auth_user";
   private static onStateChange: ((user: GoogleUser | null) => void) | null = null;
 
-  static async initialize(): Promise<void> {
+  static async initializeAsync(): Promise<void> {
     if (this.isInitialized) return;
 
     // Initialize security measures
@@ -48,8 +48,8 @@ export default class GoogleAuth {
     });
   }
 
-  static async signIn(): Promise<GoogleUser | null> {
-    await this.initialize();
+  static async signInAsync(): Promise<GoogleUser | null> {
+    await this.initializeAsync();
 
     return new Promise((resolve) => {
       google.accounts.id.prompt((notification) => {
@@ -68,7 +68,7 @@ export default class GoogleAuth {
               scope: "email profile",
               callback: (response: any) => {
                 if (response.access_token) {
-                  this.fetchUserProfile(response.access_token).then(resolve);
+                  this.fetchUserProfileAsync(response.access_token).then(resolve);
                 } else {
                   resolve(null);
                 }
@@ -96,7 +96,7 @@ export default class GoogleAuth {
     return this.currentUser !== null;
   }
 
-  static async validateStoredUser(): Promise<boolean> {
+  static async validateStoredUserAsync(): Promise<boolean> {
     if (!this.currentUser) return false;
 
     try {
@@ -141,7 +141,7 @@ export default class GoogleAuth {
     this.notifyStateChange();
   }
 
-  private static async fetchUserProfile(
+  private static async fetchUserProfileAsync(
     accessToken: string,
   ): Promise<GoogleUser | null> {
     try {

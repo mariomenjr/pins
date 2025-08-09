@@ -92,7 +92,10 @@ export default class Osm {
 
     geolocate.on("geolocate", () => Osm._heatmap());
 
-    Osm.map.on("load", () => geolocate.trigger());
+    Osm.map.on("load", () => {
+      Osm._initializeSource();
+      geolocate.trigger();
+    });
     Osm.map.on("click", Osm.addSightingAsync);
   }
 
@@ -100,7 +103,12 @@ export default class Osm {
     if (!Osm.isMarkModeOn) return;
 
     const src = Osm.map!.getSource(Osm.SOURCE_NAME) as GeoJSONSource;
-    const data = (await src!.getData()) as FeatureCollection;
+    if (!src) {
+      console.warn('Sighting source not yet initialized');
+      return;
+    }
+
+    const data = (await src.getData()) as FeatureCollection;
 
     data.features.push(
       createPoint(
@@ -109,7 +117,7 @@ export default class Osm {
       ),
     );
 
-    if (!!src) src.setData(data);
+    src.setData(data);
   }
 
   public static toggleMarkMode() {
@@ -132,27 +140,16 @@ export default class Osm {
     }
   }
 
-  private static _heatmap() {
+  private static _initializeSource() {
     Osm._mapcheck();
 
-    if (Osm.map!.isSourceLoaded(Osm.SOURCE_NAME)) return;
+    if (Osm.map!.getSource(Osm.SOURCE_NAME)) return;
 
-    // Add a geojson point source.
-    // Heatmap layers also work with a vector tile source.
-    // (To make debugging easier, we use a static dataset)
     Osm.map!.addSource(Osm.SOURCE_NAME, {
       type: "geojson",
       data: {
         type: "FeatureCollection",
-        features: Array.from({ length: 250 }).map(() =>
-          createPoint(
-            [
-              -117.63695568237284 + -0.125 * Math.random(),
-              33.50267070026682 + 0.125 * Math.random(),
-            ],
-            Math.random() * Osm.HEATMAP_MAX_MAG,
-          ),
-        ),
+        features: [],
       },
     });
 
@@ -162,5 +159,26 @@ export default class Osm {
     Osm.map!.addLayer(
       createCircleLayer(Osm.SOURCE_NAME, Osm.HEATMAP_MAX_MAG, Osm.MIN_MAP_ZOOM),
     );
+  }
+
+  private static _heatmap() {
+    const src = Osm.map!.getSource(Osm.SOURCE_NAME) as GeoJSONSource;
+    if (!src) return;
+
+    // Add sample data when geolocation succeeds
+    const sampleData = {
+      type: "FeatureCollection" as const,
+      features: Array.from({ length: 250 }).map(() =>
+        createPoint(
+          [
+            -117.63695568237284 + -0.125 * Math.random(),
+            33.50267070026682 + 0.125 * Math.random(),
+          ],
+          Math.random() * Osm.HEATMAP_MAX_MAG,
+        ),
+      ),
+    };
+
+    src.setData(sampleData);
   }
 }

@@ -23,8 +23,8 @@ export default class App {
       user: null as GoogleUser | null,
       isSignedIn: false,
 
-      async init() {
-        await GoogleAuth.initialize();
+      async initAsync() {
+        await GoogleAuth.initializeAsync();
 
         // Set up callback for auth state changes
         GoogleAuth.setStateChangeCallback((user) => {
@@ -38,7 +38,7 @@ export default class App {
 
         // Validate stored user if exists
         if (this.isSignedIn) {
-          const isValid = await GoogleAuth.validateStoredUser();
+          const isValid = await GoogleAuth.validateStoredUserAsync();
           if (!isValid) {
             console.log("Stored user session invalid, signing out...");
             GoogleAuth.signOut();
@@ -53,7 +53,7 @@ export default class App {
         this.markMode = Osm.isMarkModeOn;
       },
 
-      async handleGoogleAuth() {
+      async handleGoogleAuthAsync() {
         if (this.isSignedIn) {
           GoogleAuth.signOut();
           this.user = null;
@@ -61,7 +61,7 @@ export default class App {
           console.log("User signed out");
         } else {
           try {
-            const user = await GoogleAuth.signIn();
+            const user = await GoogleAuth.signInAsync();
             if (user) {
               this.user = user;
               this.isSignedIn = true;
