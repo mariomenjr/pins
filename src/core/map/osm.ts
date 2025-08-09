@@ -5,6 +5,7 @@ import MaplibreGeocoder, { type CarmenGeojsonFeature } from '@maplibre/maplibre-
 import "maplibre-gl/dist/maplibre-gl.css";
 import '@maplibre/maplibre-gl-geocoder/dist/maplibre-gl-geocoder.css';
 import { createCircleLayer, createHeatmapLayer, createPoint } from "./utils";
+import { supabase } from "../supabase";
 
 const div = "map";
 const vtu = "https://tiles.openfreemap.org/styles/liberty";
@@ -161,24 +162,45 @@ export default class Osm {
     );
   }
 
-  private static _heatmap() {
+  private static async _heatmap() {
     const src = Osm.map!.getSource(Osm.SOURCE_NAME) as GeoJSONSource;
     if (!src) return;
 
-    // Add sample data when geolocation succeeds
-    const sampleData = {
-      type: "FeatureCollection" as const,
-      features: Array.from({ length: 250 }).map(() =>
-        createPoint(
-          [
-            -117.63695568237284 + -0.125 * Math.random(),
-            33.50267070026682 + 0.125 * Math.random(),
-          ],
-          Math.random() * Osm.HEATMAP_MAX_MAG,
-        ),
-      ),
-    };
+    try {
+      const bounds = Osm.map!.getBounds();
+      
+      const { data: points, error } = await supabase
+        .from('points')
+        .select('*')
+        .gte('lng', bounds.getWest())
+        .lte('lng', bounds.getEast())
+        .gte('lat', bounds.getSouth())
+        .lte('lat', bounds.getNorth());
 
-    src.setData(sampleData);
+      if (error) {
+        console.error('Supabase error:', error);
+        return;
+      }
+
+      const geojson = {
+        type: 'FeatureCollection' as const,
+        features: points?.map(point => ({
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [point.lng, point.lat]
+          },
+          properties: {
+            id: point.id,
+            mag: point.mag,
+            time: new Date(point.created_at).getTime()
+          }
+        })) || []
+      };
+
+      src.setData(geojson);
+    } catch (error) {
+      console.error('Failed to fetch points:', error);
+    }
   }
 }
