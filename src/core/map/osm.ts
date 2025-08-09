@@ -73,7 +73,11 @@ export default class Osm {
       }
     }, {
       debounceSearch: 300,
-      showResultsWhileTyping: true
+      showResultsWhileTyping: true,
+      flyTo: {
+        animate: true,
+        zoom: (Osm.MAX_MAP_ZOOM-Osm.MAP_ZOOM) / 1.5 + Osm.MAP_ZOOM
+      },
     });
     
     Osm.map.addControl(geocoder, "bottom-left");
