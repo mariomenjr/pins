@@ -1,7 +1,7 @@
 import Alpine from "alpinejs";
 
 import { Osm } from "./core/map";
-import { GoogleAuth, type GoogleUser } from "./core/auth";
+import { supabase, signInWithGoogle, signOut } from "./core/supabase";
 import { Security } from "./core/security";
 
 export default class App {
@@ -20,32 +20,20 @@ export default class App {
 
     Alpine.data(`toolbox`, () => ({
       markMode: Osm.isMarkModeOn,
-      user: null as GoogleUser | null,
+      user: null as any,
       isSignedIn: false,
 
       async initAsync() {
-        await GoogleAuth.initializeAsync();
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession();
+        this.user = session?.user || null;
+        this.isSignedIn = !!session;
 
-        // Set up callback for auth state changes
-        GoogleAuth.setStateChangeCallback((user) => {
-          this.user = user;
-          this.isSignedIn = user !== null;
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange((_event, session) => {
+          this.user = session?.user || null;
+          this.isSignedIn = !!session;
         });
-
-        // Load user state from storage
-        this.user = GoogleAuth.getCurrentUser();
-        this.isSignedIn = GoogleAuth.isSignedIn();
-
-        // Validate stored user if exists
-        if (this.isSignedIn) {
-          const isValid = await GoogleAuth.validateStoredUserAsync();
-          if (!isValid) {
-            console.log("Stored user session invalid, signing out...");
-            GoogleAuth.signOut();
-            this.user = null;
-            this.isSignedIn = false;
-          }
-        }
       },
 
       mark() {
@@ -55,21 +43,10 @@ export default class App {
 
       async handleGoogleAuthAsync() {
         if (this.isSignedIn) {
-          GoogleAuth.signOut();
-          this.user = null;
-          this.isSignedIn = false;
+          await signOut();
           console.log("User signed out");
         } else {
-          try {
-            const user = await GoogleAuth.signInAsync();
-            if (user) {
-              this.user = user;
-              this.isSignedIn = true;
-              console.log("User signed in:", user);
-            }
-          } catch (error) {
-            console.error("Sign-in failed:", error);
-          }
+          await signInWithGoogle();
         }
       },
     }));

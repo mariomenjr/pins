@@ -8,3 +8,8 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Auth helpers
+export const signInWithGoogle = () => supabase.auth.signInWithOAuth({ provider: 'google' })
+export const signOut = () => supabase.auth.signOut()
+export const getUser = () => supabase.auth.getUser()

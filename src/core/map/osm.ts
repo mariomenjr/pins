@@ -109,9 +109,9 @@ export default class Osm {
     if (!Osm.isMarkModeOn) return;
 
     try {
-      // Get current user from Alpine.js store
-      const user = (window as any).Alpine?.store('auth')?.user;
-      const userId = user?.sub || 'anonymous';
+      // Get current user from Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
 
       const { error } = await supabase
         .from('points')
