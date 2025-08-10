@@ -146,8 +146,9 @@ This project uses several third-party services and libraries. If you plan to dep
 
 *   **Google Sign-In Data:** This app collects basic profile information (name, email, profile picture) when users sign in with Google
 *   **Location Data:** User-marked points with coordinates are stored in the database
-*   **Required Disclosures:** You must provide a Privacy Policy explaining what data is collected, how it's used, and user rights
-*   **Google Requirements:** Comply with [Google's User Data Policy](https://developers.google.com/terms/api-services-user-data-policy) for handling user information
+*   **Privacy Compliance:** Built-in Privacy Policy (`/privacy`) and Terms of Service (`/terms`) with consent mechanisms
+*   **Data Deletion:** Users can delete all their data through the application interface
+*   **Google Requirements:** Complies with [Google's User Data Policy](https://developers.google.com/terms/api-services-user-data-policy) for handling user information
 
 ### Recommendations
 
