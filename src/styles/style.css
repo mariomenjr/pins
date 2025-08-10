@@ -41,7 +41,7 @@
 /* Mobile fixes for MapLibre controls */
 @media (max-width: 768px) {
   .maplibregl-ctrl-bottom-left {
-    bottom: calc(60px + env(safe-area-inset-bottom)) !important;
+    bottom: calc(55px + env(safe-area-inset-bottom)) !important;
   }
   
   .maplibregl-ctrl-bottom-right {
@@ -49,7 +49,7 @@
   }
   
   .maplibregl-ctrl-attrib {
-    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    bottom: calc(5px + env(safe-area-inset-bottom)) !important;
   }
 }
 
