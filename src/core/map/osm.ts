@@ -59,7 +59,8 @@ export default class Osm {
         const features: CarmenGeojsonFeature[] = [];
         try {
           const bounds = Osm.map!.getBounds();
-          const sanitizedQuery = encodeURIComponent(config.query.replace(/[<>"'&]/g, ''));
+          if (!config.query) return { type: 'FeatureCollection', features };
+          const sanitizedQuery = encodeURIComponent(String(config.query).replace(/[<>"'&]/g, ''));
           const request = `${NOMINATIM_SEARCH_URL}?q=${sanitizedQuery}&format=geojson&polygon_geojson=1&addressdetails=1&bounded=1&viewbox=${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
           const response = await fetch(request);
           const geojson = await response.json();

@@ -12,7 +12,7 @@ export default class GoogleAuth {
   private static currentUser: GoogleAuthUser | null = null;
   private static isInitialized = false;
   private static readonly STORAGE_KEY = "google_auth_user";
-  private static onStateChange: ((user: GoogleUser | null) => void) | null = null;
+  private static onStateChange: ((user: GoogleAuthUser | null) => void) | null = null;
 
   static async initializeAsync(): Promise<void> {
     if (this.isInitialized) return;
