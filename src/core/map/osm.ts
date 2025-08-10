@@ -208,13 +208,16 @@ export default class Osm {
     try {
       const bounds = Osm.map!.getBounds();
       
+      const cutoffDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      
       const { data: points, error } = await supabase
         .from('points')
         .select('*')
         .gte('lng', bounds.getWest())
         .lte('lng', bounds.getEast())
         .gte('lat', bounds.getSouth())
-        .lte('lat', bounds.getNorth());
+        .lte('lat', bounds.getNorth())
+        .gte('created_at', cutoffDate);
 
       if (error) {
         console.error('Supabase error:', error);
