@@ -26,31 +26,6 @@
   pointer-events: none;
 }
 
-/* Mobile viewport and control fixes */
-#map {
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for modern browsers */
-}
 
-@supports (height: 100dvh) {
-  #map {
-    height: 100dvh;
-  }
-}
-
-/* Mobile fixes for MapLibre controls */
-@media (max-width: 768px) {
-  .maplibregl-ctrl-bottom-left {
-    bottom: calc(55px + env(safe-area-inset-bottom)) !important;
-  }
-  
-  .maplibregl-ctrl-bottom-right {
-    bottom: calc(40px + env(safe-area-inset-bottom)) !important;
-  }
-  
-  .maplibregl-ctrl-attrib {
-    bottom: calc(5px + env(safe-area-inset-bottom)) !important;
-  }
-}
 
 
