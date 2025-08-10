@@ -92,7 +92,7 @@ export default class Osm {
     Osm.map.addControl(new maplibregl.GlobeControl());
     Osm.map.addControl(geolocate);
 
-    geolocate.on("geolocate", () => Osm._heatmap());
+    geolocate.on("geolocate", () => Osm._heatmapAsync());
 
     Osm.map.on("load", () => {
       Osm._initializeSource();
@@ -129,7 +129,7 @@ export default class Osm {
       }
 
       // Refresh the heatmap to show the new point
-      Osm._heatmap();
+      Osm._heatmapAsync();
     } catch (error) {
       console.error('Error adding sighting:', error);
     }
@@ -187,7 +187,7 @@ export default class Osm {
       // Only fetch if bounds changed significantly
       if (!Osm.lastBounds || !Osm._boundsEqual(currentBounds, Osm.lastBounds)) {
         Osm.lastBounds = currentBounds;
-        Osm._heatmap();
+        Osm._heatmapAsync();
       }
     }, 300);
   }
@@ -200,7 +200,7 @@ export default class Osm {
            Math.abs(bounds1.getSouth() - bounds2.getSouth()) < threshold;
   }
 
-  private static async _heatmap() {
+  private static async _heatmapAsync() {
     const src = Osm.map!.getSource(Osm.SOURCE_NAME) as GeoJSONSource;
     if (!src) return;
 
