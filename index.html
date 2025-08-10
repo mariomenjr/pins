@@ -54,17 +54,21 @@
                         </svg>
                     </template>
                 </button>
-                <div class="border-t border-gray-200"></div>
-                <button
-                    class="px-2 py-2 transition cursor-pointer rounded-b"
-                    :class="{ 'bg-gray-500 shadow-2xl': markMode, 'hover:bg-gray-100': !markMode }"
-                    aria-label="Add new location marker"
-                    @click="mark"
-                >
-                    <svg class="h-5 w-5" :class="{ 'fill-white': markMode }">
-                        <use href="/app.svg#icon-add-marker"></use>
-                    </svg>
-                </button>
+                <template x-if="isSignedIn">
+                    <div>
+                        <div class="border-t border-gray-200"></div>
+                        <button
+                            class="px-2 py-2 transition cursor-pointer rounded-b"
+                            :class="{ 'bg-gray-500 shadow-2xl': markMode, 'hover:bg-gray-100': !markMode }"
+                            aria-label="Add new location marker"
+                            @click="mark"
+                        >
+                            <svg class="h-5 w-5" :class="{ 'fill-white': markMode }">
+                                <use href="/app.svg#icon-add-marker"></use>
+                            </svg>
+                        </button>
+                    </div>
+                </template>
             </nav>
         </aside>
 
