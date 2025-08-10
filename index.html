@@ -35,38 +35,91 @@
         >
             <nav class="flex flex-col bg-white shadow-lg rounded">
                 <!-- Menu icons as buttons -->
-                <button
-                    class="px-2 py-2 hover:bg-gray-100 transition cursor-pointer rounded flex items-center justify-center"
-                    aria-label="Open account menu"
-                    @click="handleGoogleAuthAsync"
-                >
-                    <!-- Show user avatar if signed in, otherwise show account icon -->
-                    <template x-if="isSignedIn && user">
-                        <img
-                            :src="user.picture"
-                            :alt="user.name"
-                            class="h-5 w-5 rounded-full"
-                        />
-                    </template>
-                    <template x-if="!isSignedIn">
-                        <svg class="h-5 w-5">
-                            <use href="/app.svg#icon-account-arrow-right"></use>
-                        </svg>
-                    </template>
-                </button>
+                <div class="relative">
+                    <button
+                        class="px-2 py-2 hover:bg-gray-100 transition cursor-pointer rounded flex items-center justify-center"
+                        aria-label="Open account menu"
+                        @click="isSignedIn ? handleGoogleAuthAsync() : showPrivacyNotice = true"
+                    >
+                        <!-- Show user avatar if signed in, otherwise show account icon -->
+                        <template x-if="isSignedIn && user">
+                            <img
+                                :src="user.picture"
+                                :alt="user.name"
+                                class="h-5 w-5 rounded-full"
+                            />
+                        </template>
+                        <template x-if="!isSignedIn">
+                            <svg class="h-5 w-5">
+                                <use href="/app.svg#icon-account-arrow-right"></use>
+                            </svg>
+                        </template>
+                    </button>
+                    
+                    <!-- Privacy Notice Modal -->
+                    <div x-show="showPrivacyNotice" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50" @click.self="showPrivacyNotice = false">
+                        <div class="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+                            <h3 class="text-lg font-semibold mb-4">Privacy Notice</h3>
+                            <p class="text-sm text-gray-600 mb-4">
+                                By signing in with Google, you agree to share your basic profile information (name, email, profile picture) and allow us to store location data for points you mark on the map.
+                            </p>
+                            <p class="text-xs text-gray-500 mb-6">
+                                <a href="/privacy.html" target="_blank" class="text-blue-600 hover:underline">Privacy Policy</a> • 
+                                <a href="/terms.html" target="_blank" class="text-blue-600 hover:underline">Terms of Service</a>
+                            </p>
+                            <div class="flex gap-3">
+                                <button @click="showPrivacyNotice = false; handleGoogleAuthAsync()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                                    Accept & Sign In
+                                </button>
+                                <button @click="showPrivacyNotice = false" class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 text-sm">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <template x-if="isSignedIn">
                     <div>
                         <div class="border-t border-gray-200"></div>
                         <button
-                            class="px-2 py-2 transition cursor-pointer rounded-b"
+                            class="px-2 py-2 transition cursor-pointer"
                             :class="{ 'bg-gray-500 shadow-2xl': markMode, 'hover:bg-gray-100': !markMode }"
                             aria-label="Add new location marker"
-                            @click="mark"
+                            @click="toggleMarkMode"
                         >
                             <svg class="h-5 w-5" :class="{ 'fill-white': markMode }">
                                 <use href="/app.svg#icon-add-marker"></use>
                             </svg>
                         </button>
+                        <div class="border-t border-gray-200"></div>
+                        <button
+                            class="px-2 py-2 hover:bg-red-50 transition cursor-pointer rounded-b text-red-600"
+                            aria-label="Delete my data"
+                            @click="showDeleteConfirm = true"
+                            title="Delete my data"
+                        >
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6.5l1.5 1.5A1 1 0 0117 13v4a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 01.5-1.3L5 6.5V5z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        
+                        <!-- Delete Confirmation Modal -->
+                        <div x-show="showDeleteConfirm" x-cloak class="fixed inset-0 bg-black/30 flex items-center justify-center z-50" @click.self="showDeleteConfirm = false">
+                            <div class="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+                                <h3 class="text-lg font-semibold mb-4 text-red-600">Delete All Data</h3>
+                                <p class="text-sm text-gray-600 mb-6">
+                                    This will permanently delete all your marked points and sign you out. This action cannot be undone.
+                                </p>
+                                <div class="flex gap-3">
+                                    <button @click="deleteAllDataAsync()" class="flex-1 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 text-sm">
+                                        Delete Everything
+                                    </button>
+                                    <button @click="showDeleteConfirm = false" class="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 text-sm">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </template>
             </nav>

@@ -140,12 +140,22 @@ This project uses several third-party services and libraries. If you plan to dep
 *   **Supabase:** Review [Supabase Terms of Service](https://supabase.com/terms) for your usage tier
 *   **Nominatim:** Follow the [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/) including rate limiting and proper attribution
 
+### Privacy and Data Collection
+
+**Important:** If you deploy this application publicly, you must inform users about data collection:
+
+*   **Google Sign-In Data:** This app collects basic profile information (name, email, profile picture) when users sign in with Google
+*   **Location Data:** User-marked points with coordinates are stored in the database
+*   **Required Disclosures:** You must provide a Privacy Policy explaining what data is collected, how it's used, and user rights
+*   **Google Requirements:** Comply with [Google's User Data Policy](https://developers.google.com/terms/api-services-user-data-policy) for handling user information
+
 ### Recommendations
 
 *   Add proper attribution in your application's footer or about section
 *   Implement rate limiting for API calls to respect service limits
-*   Consider your own Terms of Service and Privacy Policy for user data handling
+*   **Create a Privacy Policy and Terms of Service** before public deployment
 *   Ensure HTTPS deployment for secure authentication
+*   Consider adding a consent banner or privacy notice in your UI
 
 ## Contributing
 

@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+[x-cloak] {
+  display: none !important;
+}
+
 /* Center the geocoder at the bottom */
 .maplibregl-ctrl-bottom-left {
   left: 50% !important;
@@ -25,7 +29,3 @@
   cursor: crosshair !important;
   pointer-events: none;
 }
-
-
-
-

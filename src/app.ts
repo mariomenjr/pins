@@ -22,6 +22,8 @@ export default class App {
       markMode: Osm.isMarkModeOn,
       user: null as any, // TODO: Replace with proper User type from Supabase
       isSignedIn: false,
+      showPrivacyNotice: false,
+      showDeleteConfirm: false,
 
       async initAsync() {
         // Get initial session
@@ -51,6 +53,33 @@ export default class App {
           }
         } catch (error) {
           console.error('Authentication error:', error);
+        }
+      },
+
+      async deleteAllDataAsync() {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Delete all user's points
+            const { error } = await supabase
+              .from('points')
+              .delete()
+              .eq('user_id', user.id);
+            
+            if (error) {
+              console.error('Error deleting data:', error);
+              alert('Failed to delete data. Please try again.');
+              return;
+            }
+          }
+          
+          // Sign out user
+          await signOut();
+          this.showDeleteConfirm = false;
+          console.log('All user data deleted and signed out');
+        } catch (error) {
+          console.error('Error deleting data:', error);
+          alert('Failed to delete data. Please try again.');
         }
       },
     }));
