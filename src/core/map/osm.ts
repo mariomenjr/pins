@@ -120,7 +120,6 @@ export default class Osm {
           { 
             lng: e.lngLat.lng, 
             lat: e.lngLat.lat, 
-            mag: Math.random() * Osm.HEATMAP_MAX_MAG,
             user_id: userId
           }
         ]);
@@ -224,18 +223,23 @@ export default class Osm {
 
       const geojson = {
         type: 'FeatureCollection' as const,
-        features: points?.map(point => ({
-          type: 'Feature' as const,
-          geometry: {
-            type: 'Point' as const,
-            coordinates: [point.lng, point.lat]
-          },
-          properties: {
-            id: point.id,
-            mag: point.mag,
-            time: new Date(point.created_at).getTime()
-          }
-        })) || []
+        features: points?.map(point => {
+          const ageInDays = (Date.now() - new Date(point.created_at).getTime()) / (1000 * 60 * 60 * 24);
+          const mag = Math.max(0.1, Osm.HEATMAP_MAX_MAG * Math.exp(-ageInDays / 30)); // Fade over 30 days
+          
+          return {
+            type: 'Feature' as const,
+            geometry: {
+              type: 'Point' as const,
+              coordinates: [point.lng, point.lat]
+            },
+            properties: {
+              id: point.id,
+              mag: mag,
+              time: new Date(point.created_at).getTime()
+            }
+          };
+        }) || []
       };
 
       src.setData(geojson);
