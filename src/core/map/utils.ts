@@ -72,7 +72,7 @@ export function createHeatmapLayer(
         "rgb(178,24,43)",
       ],
       // Adjust the heatmap radius by zoom level
-      "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 1, 1, 13, 24],
+      "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 1, 2, 8, 4, 13, 8],
       // Transition from heatmap to circle layer by zoom level
       "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], zoom, 1, 13, 0],
     },
@@ -96,9 +96,11 @@ export function createCircleLayer(
         ["linear"],
         ["zoom"],
         1,
-        ["interpolate", ["linear"], ["get", "mag"], 1, 1, mag, 5],
+        ["interpolate", ["linear"], ["get", "mag"], 1, 1, mag, 2],
+        8,
+        ["interpolate", ["linear"], ["get", "mag"], 1, 2, mag, 4],
         13,
-        ["interpolate", ["linear"], ["get", "mag"], 1, 6, mag, 12],
+        ["interpolate", ["linear"], ["get", "mag"], 1, 3, mag, 6],
       ],
       // Color circle by earthquake magnitude
       "circle-color": [
