@@ -13,3 +13,15 @@
   width: calc(100vw - 40px);
   min-width: 300px;
 }
+
+/* Force crosshair cursor on all geolocation elements */
+.maplibregl-canvas[style*="crosshair"] ~ .maplibregl-user-location-accuracy-circle,
+.maplibregl-canvas[style*="crosshair"] ~ * .maplibregl-user-location-accuracy-circle {
+  cursor: crosshair !important;
+}
+
+/* Alternative approach - force crosshair on accuracy circle */
+.maplibregl-user-location-accuracy-circle {
+  cursor: crosshair !important;
+  pointer-events: none;
+}
