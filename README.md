@@ -87,53 +87,31 @@ npm run preview
 
 ## Deployment
 
-This project is configured for easy deployment to Netlify.
+This project builds to static files and can be deployed to any static hosting service.
 
-### 1. Configure Vite `base` Path
+### Build for Production
 
-For deployment on Netlify (or most other static hosting services that serve from the root of a domain/subdomain), ensure your `vite.config.ts` has `base: '/'`. This tells Vite to resolve assets relative to the root of the deployed site.
+The build process creates optimized static files in the `dist/` directory:
 
-```typescript
-// pins/vite.config.ts
-import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite';
-
-export default defineConfig({
-    base: '/', // Set to '/' for Netlify deployment
-    plugins: [
-        tailwindcss(),
-    ],
-});
+```bash
+npm run build
 ```
 
-### 2. Deploy with Netlify
+### Deployment Options
 
-Netlify offers seamless continuous deployment directly from your Git repository:
+You can deploy the `dist/` folder to any static hosting service:
 
-1.  **Commit and Push:** Ensure all your latest changes, including the `vite.config.ts` update, are pushed to your GitHub repository's `main` branch.
-    ```bash
-    git add .
-    git commit -m "Prepare for Netlify deployment"
-    git push origin main
-    ```
-2.  **Connect to Netlify:**
-    *   Go to [netlify.com](https://www.netlify.com/) and sign up or log in.
-    *   Click "Add new site" -> "Import an existing project".
-    *   Connect your Git provider (e.g., GitHub) and select your `pins` repository.
-3.  **Configure Build Settings:** Netlify will usually auto-detect these for Vite, but confirm:
-    *   **Branch to deploy:** `main` (or your primary branch)
-    *   **Build command:** `npm run build`
-    *   **Publish directory:** `dist/`
-4.  **Deploy Site:** Click the "Deploy site" button. Netlify will then build and deploy your application.
+*   **Netlify:** Connect your Git repository for automatic deployments
+*   **Vercel:** Import your GitHub repository
+*   **GitHub Pages:** Use GitHub Actions to deploy from the `dist/` folder
+*   **AWS S3 + CloudFront:** Upload the `dist/` folder to S3 and configure CloudFront
+*   **Any other static hosting service**
 
-Your site will be live at a Netlify subdomain (e.g., `your-site-name.netlify.app`), and you can later configure a custom domain through the Netlify dashboard.
+### Configuration Notes
 
-### 3. Clean Up (Optional)
-
-If you previously set up GitHub Pages, you might want to disable it and remove the GitHub Actions workflow file:
-
-*   **Remove workflow file:** Delete `pins/.github/workflows/deploy.yml` from your repository.
-*   **Disable GitHub Pages:** Go to your GitHub repository -> **Settings** -> **Pages** and disable the service.
+*   Ensure your hosting service serves from the root path (`/`)
+*   Configure your hosting service to serve `index.html` for all routes (SPA routing)
+*   Make sure HTTPS is enabled for secure authentication
 
 ## Usage
 
