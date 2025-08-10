@@ -72,9 +72,9 @@ export function createHeatmapLayer(
         "rgb(178,24,43)",
       ],
       // Adjust the heatmap radius by zoom level
-      "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 1, 2, 8, 4, 13, 8],
+      "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 1, 2, 7, 12, 11, 12, 13, 8],
       // Transition from heatmap to circle layer by zoom level
-      "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], zoom, 1, 13, 0],
+      "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 11, 1, 13, 0],
     },
   };
 }
