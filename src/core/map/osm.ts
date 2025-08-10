@@ -100,7 +100,13 @@ export default class Osm {
     
     Osm.map.addControl(geocoder, "bottom-left");
     Osm.map.addControl(new maplibregl.NavigationControl(), "top-right");
-    Osm.map.addControl(new maplibregl.AttributionControl({ compact: false }));
+    Osm.map.addControl(new maplibregl.AttributionControl({ 
+      compact: false,
+      customAttribution: [
+        '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>',
+        'Tiles by <a href="https://openfreemap.org/" target="_blank">OpenFreeMap</a>'
+      ]
+    }));
     Osm.map.addControl(new maplibregl.GlobeControl());
     Osm.map.addControl(geolocate);
 
