@@ -26,14 +26,30 @@
   pointer-events: none;
 }
 
+/* Mobile viewport and control fixes */
+#map {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for modern browsers */
+}
+
+@supports (height: 100dvh) {
+  #map {
+    height: 100dvh;
+  }
+}
+
 /* Mobile fixes for MapLibre controls */
 @media (max-width: 768px) {
   .maplibregl-ctrl-bottom-left {
-    bottom: 40px !important;
+    bottom: calc(60px + env(safe-area-inset-bottom)) !important;
   }
   
   .maplibregl-ctrl-bottom-right {
-    bottom: 20px !important;
+    bottom: calc(40px + env(safe-area-inset-bottom)) !important;
+  }
+  
+  .maplibregl-ctrl-attrib {
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
   }
 }
 
