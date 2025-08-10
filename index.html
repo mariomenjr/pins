@@ -44,9 +44,10 @@
                         <!-- Show user avatar if signed in, otherwise show account icon -->
                         <template x-if="isSignedIn && user">
                             <img
-                                :src="user.picture"
-                                :alt="user.name"
+                                :src="user.user_metadata?.avatar_url || user.user_metadata?.picture"
+                                :alt="user.user_metadata?.full_name || user.user_metadata?.name || user.email"
                                 class="h-5 w-5 rounded-full"
+                                @error="$el.style.display='none'"
                             />
                         </template>
                         <template x-if="!isSignedIn">

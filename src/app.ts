@@ -1,4 +1,5 @@
 import Alpine from "alpinejs";
+import type { User } from "@supabase/supabase-js";
 
 import { Osm } from "./core/map";
 import { supabase, signInWithGoogle, signOut } from "./core/supabase";
@@ -20,7 +21,7 @@ export default class App {
 
     Alpine.data(`toolbox`, () => ({
       markMode: Osm.isMarkModeOn,
-      user: null as any, // TODO: Replace with proper User type from Supabase
+      user: null as User | null,
       isSignedIn: false,
       showPrivacyNotice: false,
       showDeleteConfirm: false,
@@ -30,11 +31,23 @@ export default class App {
         const { data: { session } } = await supabase.auth.getSession();
         this.user = session?.user || null;
         this.isSignedIn = !!session;
+        
+        // Debug user object structure
+        if (this.user) {
+          console.log('User object:', this.user);
+          console.log('User metadata:', this.user.user_metadata);
+        }
 
         // Listen for auth changes
         supabase.auth.onAuthStateChange((_event, session) => {
           this.user = session?.user || null;
           this.isSignedIn = !!session;
+          
+          // Debug user object on auth change
+          if (this.user) {
+            console.log('Auth change - User object:', this.user);
+            console.log('Auth change - User metadata:', this.user.user_metadata);
+          }
         });
       },
 
