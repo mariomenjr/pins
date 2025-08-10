@@ -8,8 +8,7 @@ export interface GoogleUser {
 }
 
 export default class GoogleAuth {
-  private static clientId =
-    "516711269207-qvad7vrql92mal19k05giaul033fmm6i.apps.googleusercontent.com";
+  private static clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   private static currentUser: GoogleUser | null = null;
   private static isInitialized = false;
   private static readonly STORAGE_KEY = "google_auth_user";
@@ -34,6 +33,9 @@ export default class GoogleAuth {
     return new Promise((resolve) => {
       const checkGoogleApi = () => {
         if (typeof google !== "undefined" && google.accounts) {
+          if (!this.clientId) {
+            throw new Error('Missing VITE_GOOGLE_CLIENT_ID environment variable');
+          }
           google.accounts.id.initialize({
             client_id: this.clientId,
             callback: this.handleCredentialResponse.bind(this),
