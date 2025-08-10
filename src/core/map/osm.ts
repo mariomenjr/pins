@@ -1,10 +1,9 @@
-import type { FeatureCollection } from "geojson";
 import maplibregl, { GeoJSONSource } from "maplibre-gl";
 import MaplibreGeocoder, { type CarmenGeojsonFeature } from '@maplibre/maplibre-gl-geocoder';
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import '@maplibre/maplibre-gl-geocoder/dist/maplibre-gl-geocoder.css';
-import { createCircleLayer, createHeatmapLayer, createPoint } from "./utils";
+import { createCircleLayer, createHeatmapLayer } from "./utils";
 import { supabase } from "../supabase";
 
 const div = "map";
