@@ -20,7 +20,7 @@ export default class App {
 
     Alpine.data(`toolbox`, () => ({
       markMode: Osm.isMarkModeOn,
-      user: null as any,
+      user: null as any, // TODO: Replace with proper User type from Supabase
       isSignedIn: false,
 
       async initAsync() {
@@ -36,17 +36,21 @@ export default class App {
         });
       },
 
-      mark() {
+      toggleMarkMode() {
         Osm.toggleMarkMode();
         this.markMode = Osm.isMarkModeOn;
       },
 
       async handleGoogleAuthAsync() {
-        if (this.isSignedIn) {
-          await signOut();
-          console.log("User signed out");
-        } else {
-          await signInWithGoogle();
+        try {
+          if (this.isSignedIn) {
+            await signOut();
+            console.log("User signed out");
+          } else {
+            await signInWithGoogle();
+          }
+        } catch (error) {
+          console.error('Authentication error:', error);
         }
       },
     }));

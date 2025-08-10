@@ -6,15 +6,18 @@ import '@maplibre/maplibre-gl-geocoder/dist/maplibre-gl-geocoder.css';
 import { createCircleLayer, createHeatmapLayer } from "./utils";
 import { supabase } from "../supabase";
 
-const div = "map";
-const vtu = "https://tiles.openfreemap.org/styles/liberty";
-const nominatim = "https://nominatim.openstreetmap.org/search";
+const MAP_CONTAINER_ID = "map";
+const VECTOR_TILE_URL = "https://tiles.openfreemap.org/styles/liberty";
+const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
+const MAGNITUDE_DECAY_DAYS = 30;
+const BOUNDS_THRESHOLD = 0.001;
+const DEBOUNCE_TIMEOUT = 300;
 
 export default class Osm {
-  static readonly MAP_DIV = div;
+  static readonly MAP_DIV = MAP_CONTAINER_ID;
   static readonly MAP_COORDS: maplibregl.LngLatLike = [-117.6591, 33.5104];
   static readonly MIN_MAP_ZOOM = 3;
-  static readonly MAP_VECTOR_TILE_URL = vtu;
+  static readonly MAP_VECTOR_TILE_URL = VECTOR_TILE_URL;
   static readonly MAP_ZOOM = 11;
   static readonly MAX_MAP_ZOOM = 21;
 
@@ -56,18 +59,26 @@ export default class Osm {
         const features: CarmenGeojsonFeature[] = [];
         try {
           const bounds = Osm.map!.getBounds();
-          const request = `${nominatim}?q=${config.query}&format=geojson&polygon_geojson=1&addressdetails=1&bounded=1&viewbox=${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
+          const sanitizedQuery = encodeURIComponent(config.query.replace(/[<>"'&]/g, ''));
+          const request = `${NOMINATIM_SEARCH_URL}?q=${sanitizedQuery}&format=geojson&polygon_geojson=1&addressdetails=1&bounded=1&viewbox=${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
           const response = await fetch(request);
           const geojson = await response.json();
-          for (const feature of geojson.features) {
-            features.push({
-              ...feature,
-              place_name: feature.properties.display_name,
-              center: feature.geometry.coordinates
-            });
+          if (Array.isArray(geojson.features)) {
+            const maxFeatures = Math.min(geojson.features.length, 10);
+            for (let i = 0; i < maxFeatures; i++) {
+              const feature = geojson.features[i];
+              if (feature && feature.properties && feature.geometry) {
+                features.push({
+                  ...feature,
+                  place_name: feature.properties.display_name,
+                  center: feature.geometry.coordinates
+                });
+              }
+            }
           }
         } catch (e) {
-          console.error(`Failed to forwardGeocode with error: ${e}`);
+          const sanitizedError = String(e).replace(/[\r\n]/g, ' ').slice(0, 200);
+          console.error(`Failed to forwardGeocode with error: ${sanitizedError}`);
         }
         return {
           type: 'FeatureCollection',
@@ -136,11 +147,15 @@ export default class Osm {
   }
 
   public static toggleMarkMode() {
+    if (!Osm.map) {
+      console.error('Map not initialized');
+      return;
+    }
     Osm.isMarkModeOn = !Osm.isMarkModeOn;
-    Osm.map!.getCanvas().style.cursor = Osm.isMarkModeOn ? "crosshair" : "";
+    Osm.map.getCanvas().style.cursor = Osm.isMarkModeOn ? "crosshair" : "";
   }
 
-  private static _precheck() {
+  private static _precheck(): void {
     if (!document.getElementById("map")) {
       throw new Error("Missing #map container.");
     }
@@ -149,13 +164,13 @@ export default class Osm {
     }
   }
 
-  private static _mapcheck() {
+  private static _mapcheck(): void {
     if (!Osm.map) {
       throw new Error("Map not initialized.");
     }
   }
 
-  private static _initializeSource() {
+  private static _initializeSource(): void {
     Osm._mapcheck();
 
     if (Osm.map!.getSource(Osm.SOURCE_NAME)) return;
@@ -176,7 +191,7 @@ export default class Osm {
     );
   }
 
-  private static _debouncedHeatmap() {
+  private static _debouncedHeatmap(): void {
     if (Osm.heatmapTimeout) {
       clearTimeout(Osm.heatmapTimeout);
     }
@@ -189,18 +204,17 @@ export default class Osm {
         Osm.lastBounds = currentBounds;
         Osm._heatmapAsync();
       }
-    }, 300);
+    }, DEBOUNCE_TIMEOUT);
   }
 
   private static _boundsEqual(bounds1: maplibregl.LngLatBounds, bounds2: maplibregl.LngLatBounds): boolean {
-    const threshold = 0.001; // ~100m
-    return Math.abs(bounds1.getWest() - bounds2.getWest()) < threshold &&
-           Math.abs(bounds1.getEast() - bounds2.getEast()) < threshold &&
-           Math.abs(bounds1.getNorth() - bounds2.getNorth()) < threshold &&
-           Math.abs(bounds1.getSouth() - bounds2.getSouth()) < threshold;
+    return Math.abs(bounds1.getWest() - bounds2.getWest()) < BOUNDS_THRESHOLD &&
+           Math.abs(bounds1.getEast() - bounds2.getEast()) < BOUNDS_THRESHOLD &&
+           Math.abs(bounds1.getNorth() - bounds2.getNorth()) < BOUNDS_THRESHOLD &&
+           Math.abs(bounds1.getSouth() - bounds2.getSouth()) < BOUNDS_THRESHOLD;
   }
 
-  private static async _heatmapAsync() {
+  private static async _heatmapAsync(): Promise<void> {
     const src = Osm.map!.getSource(Osm.SOURCE_NAME) as GeoJSONSource;
     if (!src) return;
 
@@ -213,7 +227,8 @@ export default class Osm {
         .gte('lng', bounds.getWest())
         .lte('lng', bounds.getEast())
         .gte('lat', bounds.getSouth())
-        .lte('lat', bounds.getNorth());
+        .lte('lat', bounds.getNorth())
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Supabase error:', error);
@@ -224,7 +239,7 @@ export default class Osm {
         type: 'FeatureCollection' as const,
         features: points?.map(point => {
           const ageInDays = (Date.now() - new Date(point.created_at).getTime()) / (1000 * 60 * 60 * 24);
-          const mag = Math.max(0.1, Osm.HEATMAP_MAX_MAG * Math.exp(-ageInDays / 30)); // Fade over 30 days
+          const mag = Math.max(0.1, Osm.HEATMAP_MAX_MAG * Math.exp(-ageInDays / MAGNITUDE_DECAY_DAYS));
           
           return {
             type: 'Feature' as const,

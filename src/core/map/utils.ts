@@ -4,7 +4,7 @@ import type {
   HeatmapLayerSpecification,
 } from "maplibre-gl";
 
-export function createPoint(coords: Position, mag: number) {
+export function createPoint(coords: Position, magnitude: number) {
   const time = Date.now();
   return {
     type: "Feature" as const,
@@ -14,7 +14,7 @@ export function createPoint(coords: Position, mag: number) {
     },
     properties: {
       id: time,
-      mag: mag,
+      mag: magnitude,
       time: time,
     },
   };

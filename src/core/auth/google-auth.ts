@@ -1,6 +1,6 @@
 import { Security } from "../security";
 
-export interface GoogleUser {
+export interface GoogleAuthUser {
   id: string;
   email: string;
   name: string;
@@ -8,8 +8,8 @@ export interface GoogleUser {
 }
 
 export default class GoogleAuth {
-  private static clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  private static currentUser: GoogleUser | null = null;
+  private static clientId: string;
+  private static currentUser: GoogleAuthUser | null = null;
   private static isInitialized = false;
   private static readonly STORAGE_KEY = "google_auth_user";
   private static onStateChange: ((user: GoogleUser | null) => void) | null = null;
@@ -30,11 +30,16 @@ export default class GoogleAuth {
     // Load user from localStorage first
     this.loadUserFromStorage();
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds timeout
+      
       const checkGoogleApi = () => {
         if (typeof google !== "undefined" && google.accounts) {
+          this.clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
           if (!this.clientId) {
-            throw new Error('Missing VITE_GOOGLE_CLIENT_ID environment variable');
+            reject(new Error('Missing VITE_GOOGLE_CLIENT_ID environment variable'));
+            return;
           }
           google.accounts.id.initialize({
             client_id: this.clientId,
@@ -43,6 +48,11 @@ export default class GoogleAuth {
           this.isInitialized = true;
           resolve();
         } else {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            reject(new Error('Google API failed to load within timeout'));
+            return;
+          }
           setTimeout(checkGoogleApi, 100);
         }
       };
@@ -50,7 +60,7 @@ export default class GoogleAuth {
     });
   }
 
-  static async signInAsync(): Promise<GoogleUser | null> {
+  static async signInAsync(): Promise<GoogleAuthUser | null> {
     await this.initializeAsync();
 
     return new Promise((resolve) => {
@@ -90,7 +100,7 @@ export default class GoogleAuth {
     this.removeUserFromStorage();
   }
 
-  static getCurrentUser(): GoogleUser | null {
+  static getCurrentUser(): GoogleAuthUser | null {
     return this.currentUser;
   }
 
@@ -145,7 +155,7 @@ export default class GoogleAuth {
 
   private static async fetchUserProfileAsync(
     accessToken: string,
-  ): Promise<GoogleUser | null> {
+  ): Promise<GoogleAuthUser | null> {
     try {
       const response = await fetch(
         "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -167,6 +177,8 @@ export default class GoogleAuth {
         this.saveUserToStorage();
         this.notifyStateChange();
         return this.currentUser;
+      } else {
+        throw new Error(`Failed to fetch user profile: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -176,15 +188,20 @@ export default class GoogleAuth {
   }
 
   private static parseJwt(token: string): any {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(""),
-    );
-    return JSON.parse(jsonPayload);
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(""),
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('Failed to parse JWT token:', error);
+      throw new Error('Invalid JWT token format');
+    }
   }
 
   private static saveUserToStorage(): void {
@@ -243,7 +260,7 @@ export default class GoogleAuth {
     );
   }
 
-  private static sanitizeUserData(user: any): GoogleUser {
+  private static sanitizeUserData(user: any): GoogleAuthUser {
     return {
       id: Security.sanitizeString(user.id, 100),
       email: Security.sanitizeString(user.email, 100),
@@ -252,7 +269,7 @@ export default class GoogleAuth {
     };
   }
 
-  static setStateChangeCallback(callback: (user: GoogleUser | null) => void): void {
+  static setStateChangeCallback(callback: (user: GoogleAuthUser | null) => void): void {
     this.onStateChange = callback;
   }
 

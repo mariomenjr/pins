@@ -127,7 +127,8 @@ export default class Security {
     const originalSetItem = localStorage.setItem;
     localStorage.setItem = function (key: string, value: string) {
       if (value.length > Security.config.maxStorageSize) {
-        console.warn(`Storage value for key "${key}" exceeds size limit`);
+        const sanitizedKey = key.replace(/[\r\n]/g, ' ').slice(0, 50);
+        console.warn(`Storage value for key "${sanitizedKey}" exceeds size limit`);
         return;
       }
       originalSetItem.call(this, key, value);
@@ -220,19 +221,28 @@ export default class Security {
    * Log security events (in production, send to monitoring service)
    */
   static logSecurityEvent(event: string, details?: any): void {
-    const logData = {
-      timestamp: new Date().toISOString(),
-      event,
-      details,
-      userAgent:
-        typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
-      url: typeof location !== "undefined" ? location.href : "unknown",
-    };
+    try {
+      const logData = {
+        timestamp: new Date().toISOString(),
+        event,
+        details,
+        userAgent:
+          typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+        url: typeof location !== "undefined" ? location.href : "unknown",
+      };
 
-    console.warn("Security Event:", logData);
+      const sanitizedLogData = {
+        ...logData,
+        event: logData.event.replace(/[\r\n]/g, ' ').slice(0, 100),
+        details: typeof logData.details === 'string' ? logData.details.replace(/[\r\n]/g, ' ').slice(0, 200) : logData.details
+      };
+      console.warn("Security Event:", sanitizedLogData);
 
-    // In production, you'd send this to your monitoring service:
-    // fetch('/api/security-log', { method: 'POST', body: JSON.stringify(logData) });
+      // In production, you'd send this to your monitoring service:
+      // fetch('/api/security-log', { method: 'POST', body: JSON.stringify(logData) });
+    } catch (error) {
+      console.error('Failed to log security event:', error);
+    }
   }
 
   /**
